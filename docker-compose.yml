@@ -25,6 +25,8 @@ services:
         condition: service_started
       mariadb:
         condition: service_healthy
+      imageserver:
+        condition: service_healthy
 
   # SOCKS5 proxy over SSH jump hosts
   sshproxy:
@@ -79,6 +81,27 @@ services:
         source: finna-mariadb
         target: /var/lib/mysql:rw
 
+  imageserver:
+    image: ghcr.io/natlibfi/finna-cantaloupe-docker:main
+    restart: always
+    configs:
+      - source: cantaloupe_properties
+        target: /etc/cantaloupe/cantaloupe.properties
+    env_file: .env
+    ports:
+      - 8182:8182
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://admin:admin@localhost:8181/admin/status"]
+      start_period: 5s
+      interval: 5s
+      timeout: 20s
+      retries: 4
+    volumes:
+      - type: volume
+        target: /var/cache/cantaloupe
+        source: imageserver
+        read_only: false
+
 configs:
   site_config:
     file: local/docker/vufind2.conf
@@ -88,6 +111,8 @@ configs:
     file: module/VuFind/sql/mysql.sql
   finna_sql:
     file: module/Finna/sql/mysql.sql
+  cantaloupe_properties:
+    file: local/docker/cantaloupe.properties
 
 secrets:
   db_root_passwd:
@@ -96,3 +121,4 @@ secrets:
 volumes:
   finna-mariadb:
   finna-log:
+  imageserver:
