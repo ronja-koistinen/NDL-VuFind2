@@ -8,8 +8,9 @@ ENV SOCKS5_PROXY_PORT=1081
 ENV SOCKS5_PROXY_DST=finna-pre-1
 ENV SSH_USER=
 
-RUN apk add --no-cache openssh-client
+RUN apk add --no-cache openssh-client tini privoxy
 
 COPY sshproxy-start.sh /
 
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/sshproxy-start.sh"]
