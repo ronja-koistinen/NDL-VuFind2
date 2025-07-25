@@ -304,6 +304,9 @@ class Loader extends \VuFind\Cover\Loader
         $providers = array_filter(
             array_merge($datasourceProviders, $commonProviders)
         );
+        $iiifProxyService
+            = $this->config->Content->iiifProxyService
+            ?? null;
 
         // Try to find provider-specific cache file
         foreach ($providers as $provider) {
@@ -337,7 +340,7 @@ class Loader extends \VuFind\Cover\Loader
                 }
             } catch (\Exception $e) {
                 $this->debug(
-                    $e::class . ' during cache processing of ' . $apiName
+                        $e::class . ' during cache processing of ' . $apiName
                     . ': ' . $e->getMessage()
                 );
             }
@@ -356,6 +359,10 @@ class Loader extends \VuFind\Cover\Loader
                 // Is the current provider appropriate for the available data?
                 if ($handler->supports($ids)) {
                     if ($url = $handler->getUrl($key, $this->size, $ids)) {
+                        if ($iiifProxyService) {
+                            $iif_id = encodeIdentifier($url);
+                            $url = "$iiifProxyService/$iif_id/full/max/0/default.jpg";
+                        }
                         $success = $this->processImageURLForSource(
                             $url,
                             $handler->isCacheAllowed(),
@@ -368,7 +375,7 @@ class Loader extends \VuFind\Cover\Loader
                 }
             } catch (\Exception $e) {
                 $this->debug(
-                    $e::class . ' during processing of ' . $apiName
+                        $e::class . ' during processing of ' . $apiName
                     . ': ' . $e->getMessage()
                 );
             }
@@ -446,8 +453,8 @@ class Loader extends \VuFind\Cover\Loader
     protected function getUnsizedImage(string $url)
     {
         $url = str_replace(
-            [' ', 'ä','ö','å','Ä','Ö','Å'],
-            ['%20','%C3%A4','%C3%B6','%C3%A5','%C3%84','%C3%96','%C3%85'],
+            [' ', 'ä', 'ö', 'å', 'Ä', 'Ö', 'Å'],
+            ['%20', '%C3%A4', '%C3%B6', '%C3%A5', '%C3%84', '%C3%96', '%C3%85'],
             trim($url)
         );
         // Figure out file paths -- $tempFile will be used to store the
