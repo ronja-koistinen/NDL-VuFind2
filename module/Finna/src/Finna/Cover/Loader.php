@@ -33,6 +33,7 @@
 
 namespace Finna\Cover;
 
+use Finna\View\Helper\Root\RecordImageIiif;
 use function func_get_args;
 use function is_array;
 use function is_callable;
@@ -309,40 +310,42 @@ class Loader extends \VuFind\Cover\Loader
             ?? null;
 
         // Try to find provider-specific cache file
-        foreach ($providers as $provider) {
-            $provider = explode(':', trim($provider));
-            $apiName = strtolower(trim($provider[0]));
-            $key = isset($provider[1]) ? trim($provider[1]) : null;
-            try {
-                $handler = $this->apiManager->get($apiName);
+        if (!$iiifProxyService) {
+            foreach ($providers as $provider) {
+                $provider = explode(':', trim($provider));
+                $apiName = strtolower(trim($provider[0]));
+                $key = isset($provider[1]) ? trim($provider[1]) : null;
+                try {
+                    $handler = $this->apiManager->get($apiName);
 
-                // Is the current provider appropriate for the available data?
-                if (
-                    !$handler->supports($ids)
-                    || !$handler->getUrl($key, $this->size, $ids)
-                ) {
-                    continue;
+                    // Is the current provider appropriate for the available data?
+                    if (
+                        !$handler->supports($ids)
+                        || !$handler->getUrl($key, $this->size, $ids)
+                    ) {
+                        continue;
+                    }
+                    $this->localFile = $this->determineLocalFile($ids, $apiName);
+                    $this->unsizedImageFile = $this->determineLocalFile($ids, $apiName, true);
+                    if (is_readable($this->localFile)) {
+                        // Load local cache if available
+                        $this->contentType = 'image/jpeg';
+                        $this->image = file_get_contents($this->localFile);
+                        return true;
+                    } elseif (
+                        is_readable($this->unsizedImageFile)
+                        && $this->localFile = $this->createResizedImage($this->unsizedImageFile, $this->localFile)
+                    ) {
+                        $this->contentType = 'image/jpeg';
+                        $this->image = file_get_contents($this->localFile);
+                        return true;
+                    }
+                } catch (\Exception $e) {
+                    $this->debug(
+                            $e::class . ' during cache processing of ' . $apiName
+                        . ': ' . $e->getMessage()
+                    );
                 }
-                $this->localFile = $this->determineLocalFile($ids, $apiName);
-                $this->unsizedImageFile = $this->determineLocalFile($ids, $apiName, true);
-                if (is_readable($this->localFile)) {
-                    // Load local cache if available
-                    $this->contentType = 'image/jpeg';
-                    $this->image = file_get_contents($this->localFile);
-                    return true;
-                } elseif (
-                    is_readable($this->unsizedImageFile)
-                    && $this->localFile = $this->createResizedImage($this->unsizedImageFile, $this->localFile)
-                ) {
-                    $this->contentType = 'image/jpeg';
-                    $this->image = file_get_contents($this->localFile);
-                    return true;
-                }
-            } catch (\Exception $e) {
-                $this->debug(
-                        $e::class . ' during cache processing of ' . $apiName
-                    . ': ' . $e->getMessage()
-                );
             }
         }
         // Try to fetch from providers
@@ -360,7 +363,7 @@ class Loader extends \VuFind\Cover\Loader
                 if ($handler->supports($ids)) {
                     if ($url = $handler->getUrl($key, $this->size, $ids)) {
                         if ($iiifProxyService) {
-                            $iif_id = encodeIdentifier($url);
+                            $iif_id = RecordImageIiif::encodeIdentifier($url);
                             $url = "$iiifProxyService/$iif_id/full/max/0/default.jpg";
                         }
                         $success = $this->processImageURLForSource(

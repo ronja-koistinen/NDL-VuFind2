@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Booky.fi cover content loader.
+ * IIIF cover loading shim.
  *
  * PHP version 8
  *
@@ -22,7 +22,7 @@
  *
  * @category VuFind
  * @package  Content
- * @author   Ere Maijala <ere.maijala@helsinki.fi>
+ * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     https://vufind.org/wiki/development Wiki
  */
@@ -32,25 +32,28 @@ namespace Finna\Content\Covers;
 use \Vufind\Config\Config;
 
 /**
- * Booky.fi cover content loader.
+ * IIIF cover loading shim.
  *
  * @category VuFind
  * @package  Content
- * @author   Ere Maijala <ere.maijala@helsinki.fi>
+ * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     https://vufind.org/wiki/development Wiki
  */
-class BookyFi extends IiifAbstractCover
+abstract class IiifAbstractCover extends \VuFind\Content\AbstractCover
 {
-    /**
-     * Constructor
+    /* Constructor
      *
      * @param Config   $config      VuFind configuration
      */
     public function __construct(Config &$config)
     {
-        parent::__construct($config);
-        $this->supportsIsbn = true;
+        if ($config->Content->iiifProxyService) {
+            // bypass generation of Cover/Show urls
+            $this->directUrls = true;
+            // the IIIF image server handles caching
+            $this->cacheAllowed = false;
+        }
     }
 
     /**
@@ -59,18 +62,10 @@ class BookyFi extends IiifAbstractCover
      * @param string $key  API key
      * @param string $size Size of image to load (small/medium/large)
      * @param array  $ids  Associative array of identifiers (keys may include 'isbn'
-     * pointing to an ISBN object and 'issn' pointing to a string)
+     * pointing to an ISBN object, 'issn' pointing to a string and 'oclc' pointing
+     * to an OCLC number string)
      *
      * @return string|bool
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function getUrl($key, $size, $ids)
-    {
-        if (isset($ids['isbn'])) {
-            $isbn = $ids['isbn']->get13();
-            return "http://www.booky.fi/image.php?id=$isbn&size=noresize";
-        }
-        return false;
-    }
+    abstract public function getUrl($key, $size, $ids);
 }

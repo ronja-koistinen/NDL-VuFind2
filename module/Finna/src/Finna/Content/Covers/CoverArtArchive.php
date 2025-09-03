@@ -30,6 +30,7 @@
 namespace Finna\Content\Covers;
 
 use function in_array;
+use \Vufind\Config\Config;
 
 /**
  * Cover Art Archive cover content loader.
@@ -40,7 +41,7 @@ use function in_array;
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     https://vufind.org/wiki/development Wiki
  */
-class CoverArtArchive extends \VuFind\Content\AbstractCover implements \VuFindHttp\HttpServiceAwareInterface
+class CoverArtArchive extends IiifAbstractCover implements \VuFindHttp\HttpServiceAwareInterface
 {
     use \VuFindHttp\HttpServiceAwareTrait;
 
@@ -55,10 +56,14 @@ class CoverArtArchive extends \VuFind\Content\AbstractCover implements \VuFindHt
      * Constructor
      *
      * @param \VuFind\Record\Loader $loader Record loader
+     * @param Config                $config
      */
-    public function __construct($loader)
+    public function __construct($loader, &$config)
     {
-        $this->cacheAllowed = true;
+        parent::__construct($config);
+        if (!$config->iifProxyService) {
+            $this->cacheAllowed = true;
+        }
         $this->recordLoader = $loader;
         $this->supportsRecordid = true;
     }

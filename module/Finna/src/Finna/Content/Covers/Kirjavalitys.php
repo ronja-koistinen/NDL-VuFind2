@@ -31,6 +31,7 @@
 namespace Finna\Content\Covers;
 
 use VuFindCode\ISBN;
+use VuFind\Config\Config;
 
 /**
  * Kirjavalitys Cover Image Service cover content loader.
@@ -42,22 +43,23 @@ use VuFindCode\ISBN;
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     https://vufind.org/wiki/development Wiki
  */
-class Kirjavalitys extends \VuFind\Content\AbstractCover
+class Kirjavalitys extends IiifAbstractCover
 {
     /**
      * Recordloader to fetch the current record
      *
-     * @var VuFind\RecordLoader
+     * @var \VuFind\Record\Loader
      */
     protected $recordLoader = null;
 
     /**
      * Constructor
      *
-     * @param VuFind\RecordLoader $recordLoader Record loader.
+     * @param \VuFind\Record\Loader $recordLoader Record loader.
      */
-    public function __construct(\VuFind\Record\Loader $recordLoader)
+    public function __construct(\VuFind\Record\Loader $recordLoader, Config &$config)
     {
+        parent::__construct($config);
         $this->recordLoader = $recordLoader;
         $this->supportsRecordid = true;
         $this->cacheAllowed = false;

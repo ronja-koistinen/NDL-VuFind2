@@ -31,7 +31,7 @@
 
 namespace Finna\View\Helper\Root;
 
-use Finna\View\Helper\Root\RecordImage as RecordImageHelper;
+use Finna\View\Helper\Root\RecordImageIiif as RecordImageHelper;
 use VuFind\Db\Entity\UserListEntityInterface;
 use VuFind\Db\Service\CommentsServiceInterface;
 use VuFind\View\Helper\Root\Record as RecordHelper;

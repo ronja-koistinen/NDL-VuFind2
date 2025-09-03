@@ -986,16 +986,17 @@ $config = [
             ],
             'content_covers' => [
                 'factories' => [
-                    'Finna\Content\Covers\BTJ' => 'Finna\Content\Covers\BTJFactory',
-                    'Finna\Content\Covers\CoverArtArchive' => 'Finna\Content\Covers\CoverArtArchiveFactory',
-                    'Finna\Content\Covers\Kirjavalitys' => 'Finna\Content\Covers\KirjavalitysFactory',
-                ],
-                'invokables' => [
-                    'bookyfi' => 'Finna\Content\Covers\BookyFi',
-                    'natlibfi' => 'Finna\Content\Covers\NatLibFi',
+                    'Finna\Content\Covers\BookyFi' => 'Finna\Content\Covers\CoverFactory',
+                    'Finna\Content\Covers\BTJ' => 'Finna\Content\Covers\CoverFactory',
+                    'Finna\Content\Covers\CoverArtArchive' => 'Finna\Content\Covers\CoverFactory',
+                    'Finna\Content\Covers\IiifAbstractCover' => '\Finna\Content\Covers\CoverFactory',
+                    'Finna\Content\Covers\Kirjavalitys' => 'Finna\Content\Covers\CoverFactory',
+                    'Finna\Content\Covers\NatLibFi' => 'Finna\Content\Covers\CoverFactory',
                 ],
                 'aliases' => [
                     'btj' => 'Finna\Content\Covers\BTJ',
+                    'bookyfi' => 'Finna\Content\Covers\BookyFi',
+                    'natlibfi' => 'Finna\Content\Covers\NatLibFi',
                     'coverartarchive' => 'Finna\Content\Covers\CoverArtArchive',
                     'kirjavalitys' => 'Finna\Content\Covers\Kirjavalitys',
                 ],

@@ -85,7 +85,7 @@ class Record extends \VuFind\View\Helper\Root\Record
     /**
      * Record image helper
      *
-     * @var RecordImage
+     * @var RecordImageIiif
      */
     protected $recordImageHelper;
 
@@ -159,7 +159,7 @@ class Record extends \VuFind\View\Helper\Root\Record
      * @param TagsService           $tagsService            Tags service
      * @param Config                $config                 VuFind config
      * @param Loader                $loader                 Record loader
-     * @param RecordImage           $recordImage            Record image helper
+     * @param RecordImageIiif           $recordImage            Record image helper
      * @param AuthorityHelper       $authorityHelper        Authority helper
      * @param Url                   $urlHelper              Url helper
      * @param RecordLinker          $recordLinker           Record link helper
@@ -175,7 +175,7 @@ class Record extends \VuFind\View\Helper\Root\Record
         TagsService $tagsService,
         Config $config,
         Loader $loader,
-        RecordImage $recordImage,
+        RecordImageIiif $recordImage,
         AuthorityHelper $authorityHelper,
         Url $urlHelper,
         RecordLinker $recordLinker,

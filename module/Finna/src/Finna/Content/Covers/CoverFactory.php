@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Factory for Kirjavalitys Cover Images module.
+ * Factory for IIIF cover image shim
  *
  * PHP version 8
  *
@@ -22,7 +22,7 @@
  *
  * @category VuFind
  * @package  Service
- * @author   Ere Maijala <ere.maijala@helsinki.fi>
+ * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     http://vufind.org/wiki/vufind2:developer_manual Wiki
  */
@@ -35,15 +35,15 @@ use Psr\Container\ContainerExceptionInterface as ContainerException;
 use Psr\Container\ContainerInterface;
 
 /**
- * Factory for Kirjavalitys Cover Images module.
+ * Factory for IIIF cover image shim.
  *
  * @category VuFind
  * @package  Service
- * @author   Ere Maijala <ere.maijala@helsinki.fi>
+ * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     http://vufind.org/wiki/vufind2:developer_manual Wiki
  */
-class KirjavalitysFactory implements \Laminas\ServiceManager\Factory\FactoryInterface
+class CoverFactory implements \Laminas\ServiceManager\Factory\FactoryInterface
 {
     /**
      * Create an object
@@ -69,6 +69,14 @@ class KirjavalitysFactory implements \Laminas\ServiceManager\Factory\FactoryInte
         if (!empty($options)) {
             throw new \Exception('Unexpected options passed to factory.');
         }
-        return new $requestedName($container->get(\VuFind\Record\Loader::class));
+        $config = $container->get(\VuFind\Config\PluginManager::class)->get('config');
+        switch ($requestedName) {
+            case 'BTJ':
+            case 'CoverArtArchive':
+            case 'Kirjavalitys':
+                return new $requestedName($container->get(\VuFind\Record\Loader::class), $config);
+            default:
+                return new $requestedName($config);
+        }
     }
 }

@@ -25,7 +25,6 @@
  * @author   Samuli Sillanpää <samuli.sillanpaa@helsinki.fi>
  * @author   Ere Maijala <ere.maijala@helsinki.fi>
  * @author   Juha Luoma <juha.luoma@helsinki.fi>
- * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     http://vufind.org   Main Site
  */
@@ -47,7 +46,7 @@ use function in_array;
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     http://vufind.org   Main Site
  */
-class RecordImage extends \Laminas\View\Helper\AbstractHelper
+class RecordImageIiif extends \Laminas\View\Helper\AbstractHelper
 {
     /**
      * Record view helper
@@ -78,12 +77,25 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
      *
      * @param \Finna\View\Helper\Root\Record $record Record helper.
      *
-     * @return Finna\View\Helper\Root\Header
+     * @return Self
      */
     public function __invoke(\Finna\View\Helper\Root\Record $record)
     {
         $this->record = $record;
         return $this;
+    }
+
+    /**
+     * Encode URL to be a suitable identifier for querying the image server.
+     *
+     * @param string $id    IIIF image identifier (e.g. URL for pass-through)
+     * @return string       Aggressively URL-encoded string to make sure all
+     *                      RFC 3986 reserved characters are escaped (namely
+     *                      '/', '?' and the like)
+     */
+    public static function encodeIdentifier(string $id): string
+    {
+        return rawurlencode($id);
     }
 
     /**
@@ -161,11 +173,11 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
             $params,
         );
 
-        $url = ($this->urlHelper)(
-            'cover-show',
-            [],
-            $canonical ? ['force_canonical' => true] : []
-        ) . '?' . http_build_query($imageParams);
+        $iiifProxyService
+            = $this->config->Content->iiifProxyService
+            ?? null;
+        $iif_id = self::encodeIdentifier($imageParams);
+        $url = "$iiifProxyService/$iif_id/full/max/0/default.jpg";
         $pdf = $images[$index]['pdf'] ?? false;
 
         return compact('url', 'pdf');
@@ -411,12 +423,12 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
                     continue;
                 }
                 $model['params'] = http_build_query([
-                        'method' => 'getModel',
-                        'id' => $uniqueID,
-                        'index' => $index,
-                        'format' => $model['format'],
-                        'source' => $source,
-                    ]);
+                    'method' => 'getModel',
+                    'id' => $uniqueID,
+                    'index' => $index,
+                    'format' => $model['format'],
+                    'source' => $source,
+                ]);
             }
             unset($model);
             $result[$index] = array_merge($template, $object);

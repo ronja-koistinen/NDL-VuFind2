@@ -28,6 +28,7 @@
  */
 
 namespace Finna\Content\Covers;
+use VuFind\Config\Config;
 
 /**
  * National Library of Finland cover content loader.
@@ -38,15 +39,18 @@ namespace Finna\Content\Covers;
  * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
  * @link     https://vufind.org/wiki/development Wiki
  */
-class NatLibFi extends \VuFind\Content\AbstractCover
+class NatLibFi extends IiifAbstractCover
 {
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(Config &$config)
     {
+        parent::__construct($config);
+        if (!$config->Content->iifProxyService) {
+            $this->cacheAllowed = true;
+        }
         $this->supportsIsbn = true;
-        $this->cacheAllowed = true;
     }
 
     /**
