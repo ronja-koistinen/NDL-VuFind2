@@ -6,7 +6,7 @@ set -eu
 install -o 0 -g 0 -m 0600 /tmp/ssh_known_hosts /etc/ssh/
 install -o 0 -g 0 -m 0600 /tmp/ssh.conf /etc/ssh/ssh_config.d/
 
-printf "listen-address 0.0.0.0:8080\nforward-socks5 / localhost:$SOCKS5_PROXY_PORT .\n" \
+printf "listen-address 0.0.0.0:8090\nforward-socks5 / localhost:$SOCKS5_PROXY_PORT .\n" \
    > /etc/privoxy/config
 
 /usr/sbin/privoxy --no-daemon /etc/privoxy/config &

@@ -27,6 +27,8 @@ services:
         condition: service_healthy
       imageserver:
         condition: service_started
+    networks:
+      - finnadev
 
   # SOCKS5 proxy over SSH jump hosts
   sshproxy:
@@ -51,6 +53,8 @@ services:
     env_file: .env
     environment:
       - SSH_AUTH_SOCK=/ssh-auth.sock
+    networks:
+      - finnadev
 
   mariadb:
     image: mariadb:10-ubi
@@ -80,6 +84,8 @@ services:
       - type: volume
         source: finna-mariadb
         target: /var/lib/mysql:rw
+    networks:
+      - finnadev
 
   imageserver:
     image: ghcr.io/natlibfi/finna-cantaloupe-docker:main
@@ -95,6 +101,8 @@ services:
         target: /var/cache/cantaloupe
         source: imageserver
         read_only: false
+    networks:
+      - finnadev
 
 configs:
   site_config:
@@ -116,3 +124,7 @@ volumes:
   finna-mariadb:
   finna-log:
   imageserver:
+
+networks:
+  finnadev:
+    enable_ipv6: true
