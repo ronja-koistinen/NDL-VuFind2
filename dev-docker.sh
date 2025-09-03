@@ -37,9 +37,16 @@ fi
 if [ -e "$LISTEN_SOCK" -a ! -S "$LISTEN_SOCK" ]; then
     echo "Error: $LISTEN_SOCK exists but is not a socket" >&2
     exit 1
-elif [ ! -e "$LISTEN_SOCK" ]; then
-    # Clone the SSH agent socket to a predictable path we can mount in
-    # the container
+elif [ -S "$LISTEN_SOCK" ] && ! fuser -s "$LISTEN_SOCK"; then
+    # the file exists and is a socket, but no process is using it. this means
+    # socat probably didn't exit normally and clean up the file
+    rm "$LISTEN_SOCK"
+fi
+
+if [ ! -e "$LISTEN_SOCK" ]; then
+    # Clone the SSH agent socket to a predictable path we can mount in the
+    # container. Only necessary if socat is not already running from a previous
+    # invocation of this script.
     socat -d0 -lf socat.log UNIX-LISTEN:"$LISTEN_SOCK",fork \
         UNIX-CONNECT:"$SSH_AUTH_SOCK" &
 fi
