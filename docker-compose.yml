@@ -101,6 +101,10 @@ services:
         target: /var/cache/cantaloupe
         source: imageserver
         read_only: false
+      - type: bind
+        source: ./test_images
+        target: /var/iiif
+        read_only: false
     networks:
       - finnadev
 
