@@ -852,6 +852,51 @@ class Record extends \VuFind\View\Helper\Root\Record
         return array_intersect($formats, $this->driver->getFormats());
     }
 
+    public function getAllImagesAsSourceHighResUrls($language, $includePdf = true)
+    {
+        $images = $this->driver->tryMethod('getAllImages', [$language, $includePdf]) ?? [];
+        foreach ($images as $idx => &$image) {
+            if (!empty($image['highResolution'])) {
+                $largest = ['area' => -1, 'size' => null];
+                foreach ($image['highResolution'] as $size => &$values) {
+                    foreach ($values as $key => &$data) {
+                        $area = isset($data['width']) && isset($data['height'])
+                            ? $data['width']['value'] * $data['height']['value']
+                            : 0;
+                        if ($area > $largest['area']) {
+                            $largest = ['area' => $area, 'size' => $size];
+                        }
+                    }
+                }
+                if ($largest['size'] !== null) {
+                    $image['highResolution'] = array_filter(
+                        $image['highResolution'],
+                        fn($size) => $size === $largest['size'],
+                        ARRAY_FILTER_USE_KEY
+                    );
+                    $image['urls'] = [];
+                }
+            } else if (isset($image['urls']['master'])) {
+                unset($image['urls']['large']);
+                unset($image['urls']['medium']);
+                unset($image['urls']['small']);
+            } else if (isset($image['urls']['large'])) {
+                unset($image['urls']['master']);
+                unset($image['urls']['medium']);
+                unset($image['urls']['small']);
+            } else if (isset($image['urls']['medium'])) {
+                unset($image['urls']['master']);
+                unset($image['urls']['large']);
+                unset($image['urls']['small']);
+            } else if (isset($image['urls']['small'])) {
+                unset($image['urls']['master']);
+                unset($image['urls']['large']);
+                unset($image['urls']['medium']);
+            }
+        }
+        return $images;
+    }
+
     /**
      * Return an array of all record images in all sizes
      *

@@ -59,8 +59,10 @@ class RecordImageFactory implements FactoryInterface
         $requestedName,
         ?array $options = null
     ) {
+        $config = $container->get(\VuFind\Config\PluginManager::class)->get('config');
         return new $requestedName(
-            $container->get('ViewHelperManager')->get('url')
+            $container->get('ViewHelperManager')->get('url'),
+            $config
         );
     }
 }

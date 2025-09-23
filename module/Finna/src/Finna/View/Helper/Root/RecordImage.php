@@ -32,6 +32,7 @@
 namespace Finna\View\Helper\Root;
 
 use Laminas\View\Helper\Url;
+use VuFind\Config\Config;
 
 use function func_get_args;
 use function in_array;
@@ -63,13 +64,22 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
     protected $urlHelper;
 
     /**
+     * VuFind config
+     *
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * Constructor.
      *
      * @param Url $urlHelper Url helper.
+     * @param Config $config VuFind config.
      */
-    public function __construct(Url $urlHelper)
+    public function __construct(Url $urlHelper, Config &$config)
     {
         $this->urlHelper = $urlHelper;
+        $this->config = $config;
     }
 
     /**
@@ -285,6 +295,38 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
         return $images;
     }
 
+    public function getAllImagesAsIiifProxyUrls(
+        $language,
+        $params = [],
+    ) {
+        // TODO: maybe if(!isset($this->config->Content->iiifProxyService)) {
+        // throw something }
+        $images = $this->record->getAllImagesAsSourceHighResUrls($language);
+        $sizes = [];
+        if (!empty($params)) {
+            foreach ($params as $k => $v) {
+                $sizes[$k] = '!' . $v['w'] . ',' . $v['h'];
+            }
+        } else {
+            $sizes = ["large" => "max"];
+        }
+
+        foreach ($images as &$image) {
+            if (!empty($image['highResolution'])) {
+                $iiifId = array_pop($image['highResolution'])[0]['url'];
+            } else {
+                $iiifId = array_values($image['urls'])[0];
+            }
+            $iiifId = rawurlencode($iiifId);
+            foreach ($sizes as $size => $sizeCmd) {
+                $image['urls'][$size] = $this->config->Content->iiifProxyService .
+                    "/$iiifId/full/$sizeCmd/0/default.jpg";
+            }
+        }
+        unset($image);
+        return $images;
+    }
+
     /**
      * Return rendered record image HTML.
      *
@@ -343,12 +385,19 @@ class RecordImage extends \Laminas\View\Helper\AbstractHelper
         $imageToRecord = $extraParams['imageToRecord'] ?? false;
 
         $view = $this->getView();
-        $images = $this->getAllImagesAsCoverLinks(
+        ///if ($this->config->Content->iiifProxyService) {
+        $images = $this->getAllImagesAsIiifProxyUrls(
+            $view->layout()->userLang,
+            $params
+        );
+        ///} else {
+        $images_cover = $this->getAllImagesAsCoverLinks(
             $view->layout()->userLang,
             $params,
             true,
             true
         );
+        ///}
         // Get plausible model data
         if (
             !in_array($type, ['list', 'list grid'])

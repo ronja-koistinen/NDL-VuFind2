@@ -360,7 +360,7 @@ class Loader extends \VuFind\Cover\Loader
                 if ($handler->supports($ids)) {
                     if ($url = $handler->getUrl($key, $this->size, $ids)) {
                         if ($iiifProxyService) {
-                            $iif_id = encodeIdentifier($url);
+                            $iif_id = rawurlencode($url);
                             $url = "$iiifProxyService/$iif_id/full/max/0/default.jpg";
                         }
                         $success = $this->processImageURLForSource(
