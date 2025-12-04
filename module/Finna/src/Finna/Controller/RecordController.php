@@ -882,4 +882,32 @@ class RecordController extends \VuFind\Controller\RecordController
 
         return parent::showTab($tab, $ajax);
     }
+
+    /**
+     * Call IIIF manifest generator and encode body in JSON
+     *
+     * @return \Laminas\Http\Response
+     */
+    protected function iiifManifestAction() {
+        $driver = $this->loadRecord();
+        $generator = $this->serviceLocator->get(
+            \Finna\Record\IIIF\IIIFManifestGenerator::class
+        );
+        $manifest = $generator->generate($driver);
+        $response = $this->getResponse();
+        $headers = $this->getHeaders();
+        if ($manifest) {
+            if($manifestJson = json_encode($manifest)) {
+                $headers->addHeaderLine('Content-Type: application/json');
+                $response->setContent($manifestJson);
+            } else {
+                $headers->addHeaderLine('Content-Type: text/plain');
+                $response->setStatusCode(500);
+                $response->setContent('Error encoding JSON');
+            }
+        } else {
+            $response->setStatusCode(404);
+        }
+        return $response;
+    }
 }
