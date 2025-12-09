@@ -1168,7 +1168,7 @@ $recordRoutes = [
 // Define non tab record actions
 $nonTabRecordActions = [
     'Feedback', 'RepositoryLibraryRequest', 'ArchiveRequest', 'ValidationReport',
-    'IIIFManifest'
+    'IIIFManifest',
 ];
 
 // Define dynamic routes -- controller => [route name => action]

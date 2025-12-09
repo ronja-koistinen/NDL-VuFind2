@@ -888,7 +888,8 @@ class RecordController extends \VuFind\Controller\RecordController
      *
      * @return \Laminas\Http\Response
      */
-    protected function iiifManifestAction() {
+    protected function iiifManifestAction()
+    {
         $driver = $this->loadRecord();
         $generator = $this->serviceLocator->get(
             \Finna\Record\IIIF\IIIFManifestGenerator::class
@@ -897,7 +898,7 @@ class RecordController extends \VuFind\Controller\RecordController
         $response = $this->getResponse();
         $headers = $response->getHeaders();
         if ($manifest) {
-            if($manifestJson = json_encode($manifest)) {
+            if ($manifestJson = json_encode($manifest)) {
                 $headers->addHeaderLine('Content-Type: application/json');
                 $response->setContent($manifestJson);
             } else {

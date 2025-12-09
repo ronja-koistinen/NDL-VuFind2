@@ -29,12 +29,10 @@
 
 namespace Finna\Record\IIIF;
 
-use Laminas\View\Helper\Url;
 use Laminas\View\Helper\ServerUrl;
-use \VuFind\RecordDriver\AbstractBase as RecordDriver;
-use \VuFind\View\Helper\Root\RecordLinker;
-use \Finna\View\Helper\Root\RecordImage;
-use VuFind\View\Helper\Root\Record as RecordHelper;
+use Laminas\View\Helper\Url;
+use VuFind\RecordDriver\AbstractBase as RecordDriver;
+use VuFind\View\Helper\Root\RecordLinker;
 
 /**
  * IIIF manifest generator service
@@ -53,37 +51,38 @@ class IIIFManifestGenerator implements
     /**
      * Constructor.
      *
-     * @param Url $url                   URL helper
-     * @param ServerUrl $serverUrl       Server URL helper
+     * @param Url          $url          URL helper
+     * @param ServerUrl    $serverUrl    Server URL helper
      * @param RecordLinker $recordLinker RecordLinker helper
-     *                                   For getting the URL of the record action constructing
-     *                                   this class
-     * @param RecordHelper $recordHelper
+     *                                   For getting the URL of the record
+     *                                   action constructing this class
      */
     public function __construct(
         protected Url $url,
         protected ServerUrl $serverUrl,
         protected RecordLinker $recordLinker,
-        protected RecordHelper $recordHelper,
     ) {
     }
 
     /**
      * Generate IIIF presentation manifest (version 3)
      *
-     * @param  RecordDriver     $driver
+     * @param RecordDriver $driver Record driver
+     *
      * @return array|null
      */
-    public function generate(RecordDriver $driver): array|null {
+    public function generate(RecordDriver $driver): array|null
+    {
         $images = $driver->tryMethod('getAllImages');
-        if(!$images) {
+        if (!$images) {
             return null;
         }
 
         $recordId = $driver->getUniqueID();
         $manifestId = ($this->serverUrl)(
             $this->recordLinker->getActionUrl(
-                $driver, 'IIIFManifest',
+                $driver,
+                'IIIFManifest',
                 options: ['force_canonical' => true]
             )
         );
@@ -107,12 +106,14 @@ class IIIFManifestGenerator implements
             foreach (['large', 'medium', 'small'] as $size) {
                 if (isset($image['urls'][$size])) {
                     $bodyId = ($this->url)(
-                        'cover-show', [], ['force_canonical' => true]
+                        'cover-show',
+                        [],
+                        ['force_canonical' => true]
                     ) . '?' . http_build_query([
                         'id' => $recordId,
                         'index' => $idx,
                         'size' => $size,
-                        'source' => $driver->getSourceIdentifier()
+                        'source' => $driver->getSourceIdentifier(),
                     ]);
                     $annotationPageItem = [
                         'id' => "$manifestId/$idx/$size",
@@ -138,7 +139,7 @@ class IIIFManifestGenerator implements
             $manifest['items'][] = $canvasItem;
         }
 
-        if(empty($manifest['items'])) {
+        if (empty($manifest['items'])) {
             return null;
         } else {
             return $manifest;

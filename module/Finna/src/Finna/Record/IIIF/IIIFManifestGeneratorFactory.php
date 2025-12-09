@@ -1,4 +1,5 @@
 <?php
+
 /**
  * IIIF manifest generator factory
  *
@@ -28,16 +29,36 @@
 
 namespace Finna\Record\IIIF;
 
-use Finna\Record\IIIF\IIIFManifestGenerator;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Psr\Container\ContainerInterface;
 
-class IIIFManifestGeneratorFactory implements FactoryInterface {
+/**
+ * IIIF manifest generator factory
+ *
+ * @category VuFind
+ * @package  Service
+ * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
+ * @license  http://opensource.org/licenses/gpl-2.0.php GNU General Public License
+ * @link     https://vufind.org/wiki/development Wiki
+ */
+class IIIFManifestGeneratorFactory implements FactoryInterface
+{
+    /**
+     * Create an object
+     *
+     * @param ContainerInterface $container     Service manager
+     * @param mixed              $requestedName Service being created
+     * @param mixed              $options       Extra options (optional)
+     *
+     * @throws \Exception
+     *
+     * @return IIIFManifestGenerator
+     */
     public function __invoke(
         ContainerInterface $container,
         $requestedName,
         ?array $options = null
-    ) {
+    ): IIIFManifestGenerator {
         if (!empty($options)) {
             throw new \Exception('Unexpected options passed to factory.');
         }
@@ -46,7 +67,6 @@ class IIIFManifestGeneratorFactory implements FactoryInterface {
             $viewRenderer->plugin('Url'),
             $viewRenderer->plugin('ServerUrl'),
             $viewRenderer->plugin('recordLinker'),
-            $viewRenderer->plugin('record'),
         );
         return $generator;
     }
