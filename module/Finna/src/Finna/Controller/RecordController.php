@@ -895,7 +895,7 @@ class RecordController extends \VuFind\Controller\RecordController
         );
         $manifest = $generator->generate($driver);
         $response = $this->getResponse();
-        $headers = $this->getHeaders();
+        $headers = $response->getHeaders();
         if ($manifest) {
             if($manifestJson = json_encode($manifest)) {
                 $headers->addHeaderLine('Content-Type: application/json');

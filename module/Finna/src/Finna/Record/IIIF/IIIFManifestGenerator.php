@@ -30,9 +30,11 @@
 namespace Finna\Record\IIIF;
 
 use Laminas\View\Helper\Url;
+use Laminas\View\Helper\ServerUrl;
 use \VuFind\RecordDriver\AbstractBase as RecordDriver;
 use \VuFind\View\Helper\Root\RecordLinker;
 use \Finna\View\Helper\Root\RecordImage;
+use VuFind\View\Helper\Root\Record as RecordHelper;
 
 /**
  * IIIF manifest generator service
@@ -49,42 +51,21 @@ class IIIFManifestGenerator implements
     use \VuFindHttp\HttpServiceAwareTrait;
 
     /**
-     * URL helper
-     *
-     * @var Url
-     */
-    protected $urlHelper;
-
-    /**
-     * RecordImage helper
-     *
-     * This is needed for the getImageAsCoverLinks() method
-     *
-     * @var RecordImage
-     */
-    protected $recordImageHelper;
-
-    /**
-     * RecordLinker helper
-     *
-     * For getting the URL of the record action constructing this class
-     * @var RecordLinker
-     */
-    protected $recordLinker;
-
-    /**
      * Constructor.
      *
-     * @param Url $url
+     * @param Url $url                   URL helper
+     * @param ServerUrl $serverUrl       Server URL helper
+     * @param RecordLinker $recordLinker RecordLinker helper
+     *                                   For getting the URL of the record action constructing
+     *                                   this class
+     * @param RecordHelper $recordHelper
      */
     public function __construct(
-        Url $url,
-        RecordImage $recordImage,
-        RecordLinker $recordLinker,
+        protected Url $url,
+        protected ServerUrl $serverUrl,
+        protected RecordLinker $recordLinker,
+        protected RecordHelper $recordHelper,
     ) {
-        $this->urlHelper = $url;
-        $this->recordImageHelper = $recordImage;
-        $this->recordLinker = $recordLinker;
     }
 
     /**
@@ -100,7 +81,12 @@ class IIIFManifestGenerator implements
         }
 
         $recordId = $driver->getUniqueID();
-        $manifestId = $this->recordLinker->getActionUrl($driver, 'IIIFManifest');
+        $manifestId = ($this->serverUrl)(
+            $this->recordLinker->getActionUrl(
+                $driver, 'IIIFManifest',
+                options: ['force_canonical' => true]
+            )
+        );
 
         $manifest = [
             '@context' => 'http://iiif.io/api/presentation/3/context.json',
@@ -112,34 +98,42 @@ class IIIFManifestGenerator implements
         ];
 
         foreach ($images as $idx => &$image) {
+            $canvasId = "$manifestId/$idx";
             $canvasItem = [
-                'id' => 'https://jotainjotain', //TODO
+                'id' => $canvasId,
                 'type' => 'Canvas',
                 'items' => [],
             ];
-            if ($img = $image['urls']['large']
-                       ?? $image['urls']['medium']
-                       ?? null) {
-                $coverLinks = $this->recordImageHelper->getImageAsCoverLinks($idx);
-                $annotationPageItem = [
-                    'id' => 'https://jotainjotain2', //TODO
-                    'type' => 'AnnotationPage',
-                    'items' => [
-                        'id' => 'https://jotainjotain3', //TODO
-                        'type' => 'Annotation',
-                        'motivation' => 'painting',
-                        'body' => [
-                            'id' => 'https://jotainjotain4', //TODO
-                            'type' => 'Image',
-                            'format' => 'image/jpeg', //TODO kaiva tähän oikea arvo jostain
-                            'height' => 1234,
-                            'width' => 1234,
+            foreach (['large', 'medium', 'small'] as $size) {
+                if (isset($image['urls'][$size])) {
+                    $bodyId = ($this->url)(
+                        'cover-show', [], ['force_canonical' => true]
+                    ) . '?' . http_build_query([
+                        'id' => $recordId,
+                        'index' => $idx,
+                        'size' => $size,
+                        'source' => $driver->getSourceIdentifier()
+                    ]);
+                    $annotationPageItem = [
+                        'id' => "$manifestId/$idx/$size",
+                        'type' => 'AnnotationPage',
+                        'items' => [
+                            'id' => "$manifestId/$idx/$size/1",
+                            'type' => 'Annotation',
+                            'motivation' => 'painting',
+                            'body' => [
+                                'id' => $bodyId,
+                                'type' => 'Image',
+                                'format' => 'image/jpeg', //TODO kaiva tähän oikea arvo jostain
+                                'height' => 1234,
+                                'width' => 1234,
+                            ],
                         ],
-                    ],
-                    'target' => 'https://jotainjotain',
-                ];
-                $canvasItem['items'][] = $annotationPageItem;
-                break; // only take the largest $size
+                        'target' => $canvasId,
+                    ];
+                    $canvasItem['items'][] = $annotationPageItem;
+                    break; // only take the largest $size
+                }
             }
             $manifest['items'][] = $canvasItem;
         }

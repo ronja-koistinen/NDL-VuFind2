@@ -41,10 +41,12 @@ class IIIFManifestGeneratorFactory implements FactoryInterface {
         if (!empty($options)) {
             throw new \Exception('Unexpected options passed to factory.');
         }
+        $viewRenderer = $container->get('ViewRenderer');
         $generator = new IIIFManifestGenerator(
-            $container->get('ViewRenderer')->plugin('Url'),
-            $container->get('ViewRenderer')->plugin('recordImage'),
-            $container->get('ViewRenderer')->plugin('recordLinker'),
+            $viewRenderer->plugin('Url'),
+            $viewRenderer->plugin('ServerUrl'),
+            $viewRenderer->plugin('recordLinker'),
+            $viewRenderer->plugin('record'),
         );
         return $generator;
     }
