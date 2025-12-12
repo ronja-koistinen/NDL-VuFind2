@@ -37,6 +37,9 @@ use VuFind\View\Helper\Root\RecordLinker;
 /**
  * IIIF manifest generator service
  *
+ * Only intended for internal use as a compatibility layer. With this we can use
+ * Tify to show non-IIIF images and image sets.
+ *
  * @category VuFind
  * @package  Content
  * @author   Ronja Koistinen <ronja.koistinen@helsinki.fi>
@@ -96,43 +99,22 @@ class IIIFManifestGenerator implements
             'items' => [],
         ];
 
-        foreach ($images as $idx => &$image) {
-            $canvasId = "$manifestId/$idx";
+        foreach ($images as $idx => $image) {
             $canvasItem = [
-                'id' => $canvasId,
+                'id' => "$manifestId/$idx",
                 'type' => 'Canvas',
                 'items' => [],
             ];
             foreach (['large', 'medium', 'small'] as $size) {
                 if (isset($image['urls'][$size])) {
-                    $bodyId = ($this->url)(
-                        'cover-show',
-                        [],
-                        ['force_canonical' => true]
-                    ) . '?' . http_build_query([
-                        'id' => $recordId,
-                        'index' => $idx,
-                        'size' => $size,
-                        'source' => $driver->getSourceIdentifier(),
-                    ]);
-                    $annotationPageItem = [
-                        'id' => "$manifestId/$idx/$size",
-                        'type' => 'AnnotationPage',
-                        'items' => [
-                            'id' => "$manifestId/$idx/$size/1",
-                            'type' => 'Annotation',
-                            'motivation' => 'painting',
-                            'body' => [
-                                'id' => $bodyId,
-                                'type' => 'Image',
-                                'format' => 'image/jpeg', //TODO kaiva tähän oikea arvo jostain
-                                'height' => 1234,
-                                'width' => 1234,
-                            ],
-                        ],
-                        'target' => $canvasId,
-                    ];
-                    $canvasItem['items'][] = $annotationPageItem;
+                    $canvasItem['items'][] =
+                        $this->createAnnotationPage(
+                            $recordId,
+                            $idx,
+                            $size,
+                            $driver,
+                            $manifestId
+                        );
                     break; // only take the largest $size
                 }
             }
@@ -144,5 +126,56 @@ class IIIFManifestGenerator implements
         } else {
             return $manifest;
         }
+    }
+
+    /**
+     * Creates annotation page representing a given image
+     *
+     * @param string       $recordId   Record unique ID
+     * @param int          $index      Image number
+     * @param string       $size       Image size: 'large', 'medium', 'small'
+     * @param RecordDriver $driver     Record driver
+     * @param string       $manifestId Manifest ID, i.e. URI to the calling
+     *                                 RecordController action
+     *
+     * @return array
+     */
+    private function createAnnotationPage(
+        string $recordId,
+        int $index,
+        string $size,
+        RecordDriver $driver,
+        string $manifestId
+    ): array {
+        $bodyId = ($this->url)(
+            'cover-show',
+            [],
+            ['force_canonical' => true]
+        ) . '?' . http_build_query([
+            'id' => $recordId,
+            'index' => $index,
+            'size' => $size,
+            'source' => $driver->getSourceIdentifier(),
+        ]);
+        $annotationPage = [
+            'id' => "$manifestId/$index/$size",
+            'type' => 'AnnotationPage',
+            'items' => [[
+                'id' => "$manifestId/$index/$size/1",
+                'type' => 'Annotation',
+                'motivation' => 'painting',
+                'body' => [
+                    'id' => $bodyId,
+                    // NOTE: The image is served through the Cover/Show
+                    // endpoint, which, as of 2025-12-12, forces a conversion to
+                    // JPEG
+                    'format' => 'image/jpeg',
+                    'type' => 'Image',
+                ],
+                'target' => "$manifestId/$index",
+            ]],
+        ];
+
+        return $annotationPage;
     }
 }

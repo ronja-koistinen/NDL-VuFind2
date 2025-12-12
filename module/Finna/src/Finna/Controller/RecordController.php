@@ -894,10 +894,9 @@ class RecordController extends \VuFind\Controller\RecordController
         $generator = $this->serviceLocator->get(
             \Finna\Record\IIIF\IIIFManifestGenerator::class
         );
-        $manifest = $generator->generate($driver);
         $response = $this->getResponse();
         $headers = $response->getHeaders();
-        if ($manifest) {
+        if ($manifest = $generator->generate($driver)) {
             if ($manifestJson = json_encode($manifest)) {
                 $headers->addHeaderLine('Content-Type: application/json');
                 $response->setContent($manifestJson);
